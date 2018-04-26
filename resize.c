@@ -99,7 +99,10 @@ int main(int argc, char *argv[])
             for (int k = 0; k < n; k++)
             {
                 array[counter] = triple;
+                
+                //error testing print statement
                 printf("%i, %i, %i, %i\n", triple.rgbtBlue, triple.rgbtGreen, triple.rgbtRed, counter);
+                
                 counter++;
 
             }
