@@ -63,31 +63,36 @@ int main(int argc, char *argv[])
         return 4;
     }
 
+    int originalWidth = bi.biWidth;
+    int originalHeight = bi.biHeight;
+
     //Update height & width
     bi.biWidth *= n;
     bi.biHeight *= n;
 
     // determine padding for scanlines
+    int originalPadding = (4 - (originalWidth * sizeof(RGBTRIPLE)) % 4) % 4;
     int padding = (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
 
+    // Update & write outfile's BITMAPINFOHEADER
+    bi.biSizeImage = abs(bi.biHeight) * ((bi.biWidth * sizeof(RGBTRIPLE)) + padding);
+
     // Update & write outfile's BITMAPFILEHEADER
-    bf.bfSize = ((sizeof(RGBTRIPLE) * bi.biWidth) + padding) * abs(bi.biHeight) +
-                sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bf.bfSize = bi.biSizeImage + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+
     fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outptr);
 
-    // Update & write outfile's BITMAPINFOHEADER
-    bi.biSizeImage = ((sizeof(RGBTRIPLE) * bi.biWidth) + padding) * abs(bi.biHeight);
     fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outptr);
 
     RGBTRIPLE array[bi.biWidth * n];
 
     // iterate over infile's scanlines
-    for (int i = 0, biHeight = abs(bi.biHeight); i < biHeight; i++)
+    for (int i = 0, biHeight = abs(originalHeight); i < biHeight; i++)
     {
         int counter = 0;
 
         // iterate over pixels in scanline
-        for (int j = 0; j < bi.biWidth; j++)
+        for (int j = 0; j < originalWidth; j++)
         {
             // temporary storage
             RGBTRIPLE triple;
@@ -99,14 +104,14 @@ int main(int argc, char *argv[])
             for (int k = 0; k < n; k++)
             {
                 array[counter] = triple;
-                
-                //error testing print statement
-                printf("%i, %i, %i, %i\n", triple.rgbtBlue, triple.rgbtGreen, triple.rgbtRed, counter);
-                
+                // printf("%i, %i, %i, %i\n", triple.rgbtBlue, triple.rgbtGreen, triple.rgbtRed, counter);
                 counter++;
 
             }
         }
+
+        // skip over padding, if any
+        fseek(inptr, originalPadding, SEEK_CUR);
 
         // resize vertically
         int h = abs(bi.biHeight);
@@ -131,8 +136,6 @@ int main(int argc, char *argv[])
             fwrite(&array, sizeof(RGBTRIPLE), 1, outptr);
         }
 
-        // fseek(inptr, padding, SEEK_CUR);
-
         // // then add it back (to demonstrate how)
         // for (int k = 0; k < padding; k++)
         // {
@@ -142,37 +145,6 @@ int main(int argc, char *argv[])
 
 
 
-        // once pixels have been read and copied into array, time to write them to the out file
-
-        // // resize vertically
-        // int h = abs(bi.biHeight);
-        // // write outfile lines n times (if initial height > 1)
-        // if (h > 1)
-        // {
-        //     for (int k = 0; k < n; k++)
-        //     {
-        //         //write the array to outptr
-        //         fwrite(&array, sizeof(RGBTRIPLE), 1, outptr);
-        //         for (int a = 0; a < padding; a++)
-        //         {
-        //             fputc(0x00, outptr);
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        //     // write array to line of the resized image
-        //     fwrite(&array, sizeof(RGBTRIPLE), 1, outptr);
-        // }
-
-        // skip over padding, if any
-        // fseek(inptr, padding, SEEK_CUR);
-
-        // // then add it back (to demonstrate how)
-        // for (int k = 0; k < padding; k++)
-        // {
-        //     fputc(0x00, outptr);
-        // }
 
 
     // close infile
