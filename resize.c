@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         return 4;
     }
 
-    //store original image size for input loops
+    //store original data for loops
     int originalWidth = bi.biWidth;
     int originalHeight = bi.biHeight;
 
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outptr);
     fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outptr);
 
-    RGBTRIPLE array[bi.biWidth * n];
+    RGBTRIPLE array[originalWidth * n];
 
     // iterate over infile's scanlines
     for (int i = 0, biHeight = abs(originalHeight); i < biHeight; i++)
@@ -124,8 +124,8 @@ int main(int argc, char *argv[])
             {
                 //write the array to outptr
                 fwrite(&array, sizeof(array), 1, outptr);
-                
-                //put padding at end of line (issue)
+
+
                 for (int a = 0; a < padding; a++)
                 {
                     fputc(0x00, outptr);
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         else
         {
             // write array to line of the resized image
-            fwrite(&array, sizeof(RGBTRIPLE), 1, outptr);
+            fwrite(&array, sizeof(array), 1, outptr);
         }
     }
 
